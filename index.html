@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>FIRE Dashboard - 資産・家計・FIRE</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--text:#0f172a;--muted:#64748b;--line:#e2e8f0;--blue:#2563eb;--blue2:#dbeafe;--green:#059669;--red:#dc2626;--amber:#d97706}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}button,input,select{font:inherit}
+header{background:#0f172a;color:white;padding:20px 14px 14px;position:sticky;top:0;z-index:20}.head{max-width:980px;margin:auto}.title{font-size:23px;font-weight:800}.subtitle{font-size:12px;color:#cbd5e1;margin-top:4px}.nav{display:flex;gap:7px;margin-top:14px;overflow:auto;padding-bottom:2px}.tab{background:#1e293b;color:#cbd5e1;border:0;border-radius:999px;padding:9px 14px;white-space:nowrap;font-size:13px}.tab.active{background:#fff;color:#0f172a;font-weight:750}
+main{max-width:980px;margin:auto;padding:15px 14px 80px}.page{display:none}.page.active{display:block}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.grid4{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.card{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:16px;margin-bottom:12px;box-shadow:0 2px 12px #00000008}.metric{min-height:105px}.label{font-size:12px;color:var(--muted);margin-bottom:6px}.big{font-size:24px;font-weight:800;letter-spacing:-.5px}.small,.note{font-size:12px;color:var(--muted);line-height:1.65}.good{color:var(--green)}.bad{color:var(--red)}h2{font-size:17px;margin:0 0 13px}.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{min-width:0}input,select{width:100%;padding:11px 10px;border:1px solid #cbd5e1;border-radius:11px;background:#fff;font-size:16px}input:focus,select:focus{outline:2px solid #93c5fd;border-color:#60a5fa}button.primary,button.secondary,button.danger{border:0;border-radius:11px;padding:11px 14px;font-weight:750;margin:10px 6px 0 0;cursor:pointer}button.primary{background:var(--blue);color:#fff}button.secondary{background:#e2e8f0;color:#0f172a}button.danger{background:#fee2e2;color:#991b1b;padding:8px 11px;margin:0}.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.asset-list{display:flex;flex-direction:column;gap:8px}.asset-item{display:grid;grid-template-columns:1.25fr 1fr auto;gap:8px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fbfdff}.asset-name{font-weight:700;font-size:14px}.asset-cat{font-size:11px;color:var(--muted);margin-top:2px}.amount{text-align:right;font-weight:750}.addbox{display:grid;grid-template-columns:1fr 1.2fr 1fr auto;gap:8px;align-items:end}.addbox button{height:44px;margin:0}.summaryline{display:flex;justify-content:space-between;gap:10px;padding:7px 0}.chip{display:inline-block;padding:5px 8px;border-radius:999px;background:var(--blue2);color:#1d4ed8;font-size:11px;font-weight:700}.progress{height:12px;background:#e2e8f0;border-radius:999px;overflow:hidden}.progress i{display:block;height:100%;background:var(--blue);width:0}.bar{height:9px;background:#e2e8f0;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:#2563eb}.empty{padding:20px;text-align:center;color:var(--muted);border:1px dashed #cbd5e1;border-radius:12px}.actions{display:flex;flex-wrap:wrap;gap:6px}.actions button{margin:0}.inline{display:flex;gap:8px;align-items:center}.inline>*{flex:1}.check{display:flex;align-items:center;gap:8px;font-size:14px}.check input{width:auto}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:12px;min-width:520px}th,td{padding:8px 5px;border-bottom:1px solid var(--line);text-align:right}th:first-child,td:first-child{text-align:left}canvas{width:100%;height:245px;background:#f8fafc;border-radius:12px}.footer-note{margin-top:8px;color:var(--muted);font-size:11px;line-height:1.6}
+@media(min-width:700px){.grid{grid-template-columns:repeat(4,1fr)}.grid4{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:640px){.addbox{grid-template-columns:1fr 1fr}.addbox .full{grid-column:1/-1}.asset-item{grid-template-columns:1fr auto}.asset-item .amount{grid-column:2;grid-row:1}.asset-item .actions{grid-column:1/-1}.form{grid-template-columns:1fr}.big{font-size:22px}}
+</style>
+
+<style>
+#budget .asset-item{margin-bottom:8px}
+#budget .bar{height:7px;margin:5px 0 12px;background:var(--border);border-radius:10px;overflow:hidden}
+#budget .bar i{display:block;height:100%;background:var(--accent)}
+#fire .row,#budget .row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+</style>
+
+</head>
+<body>
+<header><div class="head">
+<div class="title">FIRE Dashboard</div><div class="subtitle">資産・時間・将来のお金をシンプルに管理</div>
+<div class="nav"><button class="tab active" data-page="home">ホーム</button><button class="tab" data-page="assets">資産</button><button class="tab" data-page="budget">家計簿</button><button class="tab" data-page="sim">シミュレーション</button><button class="tab" data-page="fire">FIRE診断</button><button class="tab" data-page="time">時間</button><button class="tab" data-page="settings">設定</button></div>
+</div></header>
+<main>
+<section id="home" class="page active">
+<div class="grid">
+<div class="card metric"><div class="label">現在の総資産</div><div class="big" id="hTotal">¥0</div><div class="small" id="hAssetCount">0件の資産</div></div>
+<div class="card metric"><div class="label">投資資産</div><div class="big" id="hInvest">¥0</div><div class="small" id="hInvestPct">0%</div></div>
+<div class="card metric"><div class="label">現金・預金</div><div class="big" id="hCash">¥0</div><div class="small">生活防衛資金など</div></div>
+<div class="card metric"><div class="label">目標資産</div><div class="big" id="hTarget">¥0</div><div class="small" id="hGap">目標未設定</div></div>
+</div>
+<div class="card"><h2>資産目標の進捗</h2><div class="progress"><i id="targetProgress"></i></div><div class="row"><span>現在 → 目標</span><b id="targetProgressText">0%</b></div></div>
+<div class="card"><h2>資産構成</h2><div id="homeAllocation"></div></div>
+<div class="card"><h2>資産記録</h2><div class="row"><span>前回記録</span><b id="prevAsset">--</b></div><div class="row"><span>今回との差</span><b id="assetDiff">--</b></div><button class="primary" id="recordBtn">今日の資産を記録</button></div>
+<div class="card"><h2>このアプリについて</h2><p class="note">資産を増やすことだけでなく、「いつまで働くか」「どれくらいの時間を自由にするか」を考えるためのシンプルなダッシュボードです。入力したデータはこの端末のブラウザに保存されます。</p></div>
+</section>
+
+<section id="assets" class="page">
+<div class="card"><h2>資産を追加</h2><div class="addbox">
+<label><div class="label">種類</div><select id="newCat"></select></label>
+<label><div class="label">資産名</div><input id="newName" placeholder="例：生活用口座、全世界株式"></label>
+<label><div class="label">評価額（万円）</div><input id="newAmount" type="number" min="0" step="0.1" placeholder="100"></label>
+<button class="primary" id="addAsset">＋ 追加</button>
+</div><p class="note">「投資信託」「債券」「国内個別株」など、種類を選んで自由に追加できます。資産名も自分で変更できます。</p></div>
+<div class="card"><div class="inline"><div><h2 style="margin:0">保有資産</h2><div class="small" id="assetTotalLabel">合計 ¥0</div></div><button class="secondary" id="addSample">サンプルを入れる</button></div><div style="height:10px"></div><div class="asset-list" id="assetList"></div></div>
+<div class="grid4" id="categoryCards"></div>
+</section>
+
+
+<section id="budget" class="page">
+  <div class="card">
+    <h2>家計簿</h2>
+    <p class="note">収入と支出を記録すると、今月の収支と支出内訳が自動で集計されます。</p>
+    <div class="form">
+      <label><div class="label">日付</div><input id="txDate" type="date"></label>
+      <label><div class="label">種類</div><select id="txType"><option value="expense">支出</option><option value="income">収入</option></select></label>
+      <label><div class="label">カテゴリ</div><select id="txCat"></select></label>
+      <label><div class="label">金額（円）</div><input id="txAmount" type="number" min="0" step="1" placeholder="3000"></label>
+      <label style="grid-column:1/-1"><div class="label">メモ</div><input id="txMemo" placeholder="例：昼食、給与、家賃"></label>
+    </div>
+    <button class="primary" id="addTx">＋ 記録</button>
+  </div>
+  <div class="grid">
+    <div class="card metric"><div class="label">今月の収入</div><div class="big good" id="bIncome">¥0</div></div>
+    <div class="card metric"><div class="label">今月の支出</div><div class="big bad" id="bExpense">¥0</div></div>
+    <div class="card metric"><div class="label">今月の収支</div><div class="big" id="bBalance">¥0</div></div>
+    <div class="card metric"><div class="label">支出件数</div><div class="big" id="bCount">0</div></div>
+  </div>
+  <div class="card"><h2>今月の支出内訳</h2><div id="budgetCats"></div></div>
+  <div class="card"><h2>記録</h2><div id="txList"></div></div>
+</section>
+
+<section id="sim" class="page">
+<div class="card"><h2>将来シミュレーション</h2><div class="form">
+<label><div class="label">現在年齢</div><input id="age" type="number" value="30" step="0.1"></label>
+<label><div class="label">働き方を変える年齢</div><input id="quitAge" type="number" value="40" step="0.1"></label>
+<label><div class="label">働いている間の運用利回り（%/年）</div><input id="pre" type="number" value="5" step="0.1"></label>
+<label><div class="label">働き方を変えた後の運用利回り（%/年）</div><input id="post" type="number" value="4" step="0.1"></label>
+<label><div class="label">働いている間の手取り（万円/年）</div><input id="income" type="number" value="400"></label>
+<label><div class="label">働き方を変えた後の収入（万円/年）</div><input id="afterIncome" type="number" value="120"></label>
+<label><div class="label">年間生活費（万円）</div><input id="expense" type="number" value="240"></label>
+<label><div class="label">生活費上昇率（%/年）</div><input id="inflation" type="number" value="2" step="0.1"></label>
+<label><div class="label">年間追加投資（万円）</div><input id="contrib" type="number" value="100"></label>
+<label><div class="label">目標資産（万円）</div><input id="target" type="number" value="3000"></label>
+</div><p class="note">簡易シミュレーションです。税金・社会保険・年金・運用商品の値動きなどは実際とは異なります。利回りは保証されません。</p></div>
+<div class="grid">
+<div class="card metric"><div class="label">働き方変更時</div><div class="big" id="sQuit">--</div></div>
+<div class="card metric"><div class="label">10年後</div><div class="big" id="s10">--</div></div>
+<div class="card metric"><div class="label">20年後</div><div class="big" id="s20">--</div></div>
+<div class="card metric"><div class="label">目標到達</div><div class="big" id="sTarget">--</div></div>
+</div>
+<div class="card"><h2>資産推移</h2><canvas id="chart" width="900" height="245"></canvas></div>
+<div class="card"><h2>年齢別シミュレーション</h2><div class="table-wrap"><table><thead><tr><th>年齢</th><th>資産</th><th>年間収支</th><th>働き方</th></tr></thead><tbody id="simRows"></tbody></table></div></div>
+</section>
+
+
+<section id="fire" class="page">
+  <div class="card">
+    <h2>FIRE診断</h2>
+    <p class="note">現在の資産・生活費・追加投資・想定利回りから、資産だけで生活費をまかなう水準への到達目安を試算します。将来の運用成果を保証するものではありません。</p>
+    <div class="form">
+      <label><div class="label">年間生活費（万円）</div><input id="fireExpense" type="number" min="0" step="1" value="240"></label>
+      <label><div class="label">取り崩し率（%/年）</div><input id="fireRate" type="number" min="0.1" step="0.1" value="4"></label>
+      <label><div class="label">現在資産（万円）</div><input id="fireAssets" type="number" min="0" step="1"></label>
+      <label><div class="label">年間追加投資（万円）</div><input id="fireContrib" type="number" min="0" step="1" value="100"></label>
+      <label><div class="label">想定運用利回り（%/年）</div><input id="fireReturn" type="number" step="0.1" value="5"></label>
+      <label><div class="label">現在年齢</div><input id="fireAge" type="number" min="0" step="0.1" value="30"></label>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="card metric"><div class="label">FIRE目標資産</div><div class="big" id="fireTarget">--</div><div class="small">年間生活費 ÷ 取り崩し率</div></div>
+    <div class="card metric"><div class="label">目標までの差</div><div class="big" id="fireGap2">--</div></div>
+    <div class="card metric"><div class="label">到達目安</div><div class="big" id="fireAgeResult">--</div></div>
+    <div class="card metric"><div class="label">現在の達成率</div><div class="big" id="firePct">--</div></div>
+  </div>
+  <div class="card"><h2>取り崩し率別の目安</h2><div id="fireScenarios"></div></div>
+  <div class="card"><h2>注意点</h2><p class="note">取り崩し率は一般的な考え方の一例です。税金、社会保険、年金、インフレ、相場下落、寿命などで結果は変わります。</p></div>
+</section>
+
+<section id="time" class="page">
+<div class="card"><h2>時間を買う計算機</h2><div class="form">
+<label><div class="label">今の年間労働時間</div><input id="fullHours" type="number" value="2000"></label>
+<label><div class="label">変更後の年間労働時間</div><input id="partHours" type="number" value="800"></label>
+<label><div class="label">今の年間手取り（万円）</div><input id="fullNet" type="number" value="320"></label>
+<label><div class="label">変更後の年間手取り（万円）</div><input id="partNet" type="number" value="120"></label>
+<label><div class="label">比較する年数</div><input id="years" type="number" value="10"></label>
+</div></div>
+<div class="grid"><div class="card metric"><div class="label">年間で増える自由時間</div><div class="big" id="freeHours">--</div></div><div class="card metric"><div class="label">年間で減る手取り</div><div class="big" id="lostNet">--</div></div><div class="card metric"><div class="label">自由時間1時間あたり</div><div class="big" id="hourCalc">--</div></div><div class="card metric"><div class="label">比較期間の自由時間</div><div class="big" id="freePeriod">--</div></div></div>
+<div class="card"><h2>考え方</h2><p class="note">「もっと働くか、もっと自由時間を取るか」を金額だけでなく時間でも考えるための指標です。結果は意思決定の参考値であり、時間の価値そのものを表すものではありません。</p></div>
+</section>
+
+<section id="settings" class="page">
+<div class="card"><h2>基本設定</h2><div class="form"><label><div class="label">目標の名称</div><input id="targetName" value="FIRE・生活防衛資金など"></label><label><div class="label">通貨表示</div><select id="currency"><option value="JPY">日本円（¥）</option></select></label></div><button class="primary" id="saveAll">設定を保存</button><button class="secondary" id="resetAll">データを初期化</button><p class="note">初期化すると、このブラウザに保存した資産・シミュレーション設定・記録が削除されます。</p></div>
+
+<div class="card">
+  <h2>家計簿カテゴリ</h2>
+  <div id="txCatList"></div>
+  <div class="inline"><input id="customTxCat" placeholder="新しいカテゴリ"><button class="secondary" id="addTxCat">＋ 追加</button></div>
+</div>
+
+<div class="card"><h2>資産の種類</h2><div id="catList"></div><div class="inline"><input id="customCat" placeholder="新しい種類を追加"><button class="secondary" id="addCat">＋ 追加</button></div><p class="note">例：投資信託、国内個別株、海外個別株、ETF、債券、REIT、暗号資産、現金・預金、その他。</p></div>
+</section>
+</main>
+<script>
+const KEY='fireDashboardV3'; const LEGACY_KEY='fireDashboardV2';
+const defaultCategories=['現金・預金','投資信託','国内個別株','海外個別株','ETF','債券','REIT','暗号資産','その他'];
+const defaultState={categories:defaultCategories,assets:[],settings:{targetName:'FIRE・生活防衛資金など'},sim:{age:30,quitAge:40,pre:5,post:4,income:400,afterIncome:120,expense:240,inflation:2,contrib:100,target:3000},time:{fullHours:2000,partHours:800,fullNet:320,partNet:120,years:10},lastRecord:null,txCategories:['食費','住居費','光熱費','通信費','交通費','保険・税金','娯楽','日用品','教育','医療','給与','副業','年金・給付','その他'],transactions:[]};
+let state=loadState();
+const $=id=>document.getElementById(id); const num=id=>{const v=parseFloat($(id).value);return Number.isFinite(v)?v:0};
+const yen=m=>new Intl.NumberFormat('ja-JP',{style:'currency',currency:'JPY',maximumFractionDigits:0}).format(m*10000);
+const esc=s=>String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+function loadState(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x){return {...defaultState,...x,settings:{...defaultState.settings,...x.settings},sim:{...defaultState.sim,...x.sim},time:{...defaultState.time,...x.time},categories:Array.isArray(x.categories)&&x.categories.length?x.categories:defaultCategories,assets:Array.isArray(x.assets)?x.assets:[]}}}catch(e){}return structuredClone(defaultState)}
+function saveState(){localStorage.setItem(KEY,JSON.stringify(state))}
+function totalAssets(){return state.assets.reduce((s,a)=>s+Math.max(0,Number(a.amount)||0),0)}
+function investmentTotal(){return state.assets.filter(a=>a.category!=='現金・預金').reduce((s,a)=>s+Math.max(0,Number(a.amount)||0),0)}
+function categoryTotals(){const out={};state.categories.forEach(c=>out[c]=0);state.assets.forEach(a=>out[a.category]=(out[a.category]||0)+(Number(a.amount)||0));return out}
+function renderCategories(){ $('newCat').innerHTML=state.categories.map(c=>`<option>${esc(c)}</option>`).join(''); $('catList').innerHTML=state.categories.map((c,i)=>`<div class="row"><span>${esc(c)}</span><button class="danger" data-delcat="${i}">削除</button></div>`).join(''); document.querySelectorAll('[data-delcat]').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.delcat),c=state.categories[i];if(state.assets.some(a=>a.category===c)){alert('この種類の資産が残っているため削除できません。先に資産の種類を変更または削除してください。');return}if(state.categories.length<=1){alert('種類は1つ以上必要です。');return}state.categories.splice(i,1);saveState();renderAll()})}
+function renderAssets(){const total=totalAssets();$('assetTotalLabel').textContent='合計 '+yen(total);const list=$('assetList');if(!state.assets.length){list.innerHTML='<div class="empty">まだ資産がありません。上のフォームから追加してください。</div>'}else{list.innerHTML=state.assets.map(a=>`<div class="asset-item"><div><div class="asset-name">${esc(a.name||'名称未設定')}</div><div class="asset-cat">${esc(a.category)}</div></div><div class="amount">${yen(a.amount)}</div><div class="actions"><button class="secondary" data-edit="${a.id}">編集</button><button class="danger" data-del="${a.id}">削除</button></div></div>`).join('')}
+ document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{state.assets=state.assets.filter(a=>a.id!==b.dataset.del);saveState();renderAll()});document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editAsset(b.dataset.edit));
+ const ct=categoryTotals();$('categoryCards').innerHTML=state.categories.map(c=>`<div class="card metric"><div class="label">${esc(c)}</div><div class="big">${yen(ct[c]||0)}</div><div class="small">${total?((ct[c]||0)/total*100).toFixed(1):0}%</div></div>`).join('');}
+function editAsset(id){const a=state.assets.find(x=>x.id===id);if(!a)return;const name=prompt('資産名',a.name);if(name===null)return;const amount=prompt('評価額（万円）',a.amount);if(amount===null)return;const cat=prompt('種類\n'+state.categories.join(' / '),a.category);if(cat===null)return;if(!state.categories.includes(cat.trim())){if(cat.trim())state.categories.push(cat.trim());else return}a.name=name.trim()||'名称未設定';a.amount=Math.max(0,Number(amount)||0);a.category=cat.trim();saveState();renderAll()}
+function addAsset(){const cat=$('newCat').value,name=$('newName').value.trim(),amount=Math.max(0,parseFloat($('newAmount').value)||0);if(!name){alert('資産名を入力してください。');return}if(amount<=0){alert('評価額を入力してください。');return}state.assets.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()),category:cat,name,amount});$('newName').value='';$('newAmount').value='';saveState();renderAll()}
+function addSample(){if(state.assets.length&& !confirm('現在の資産にサンプルを追加しますか？'))return;const samples=[['現金・預金','生活用口座',100],['投資信託','全世界株式',300],['国内個別株','国内株式',100],['債券','個人向け国債',100]];samples.forEach(([category,name,amount])=>state.assets.push({id:String(Date.now()+Math.random()),category,name,amount}));saveState();renderAll()}
+function simulate(){let A=totalAssets(),e=state.sim.expense,data=[],targetAge=null;const start=state.sim.age,quit=state.sim.quitAge,pre=state.sim.pre/100,post=state.sim.post/100,inf=state.sim.inflation/100;for(let age=Math.ceil(start);age<=90;age++){const changed=age>=quit;const income=changed?state.sim.afterIncome:state.sim.income;const cf=income-e-state.sim.contrib;A=A*(1+(changed?post:pre))+cf; if(targetAge===null&&A>=state.sim.target)targetAge=age;data.push({age,asset:A,cf,changed});e*=1+inf}return {data,targetAge}}
+function at(d,age){const r=d.find(x=>x.age===Math.round(age));return r?r.asset:0}
+function renderHome(){const total=totalAssets(),inv=investmentTotal(),cash=state.assets.filter(a=>a.category==='現金・預金').reduce((s,a)=>s+(Number(a.amount)||0),0),target=state.sim.target||0;$('hTotal').textContent=yen(total);$('hAssetCount').textContent=state.assets.length+'件の資産';$('hInvest').textContent=yen(inv);$('hInvestPct').textContent=(total?inv/total*100:0).toFixed(1)+'%';$('hCash').textContent=yen(cash);$('hTarget').textContent=yen(target);$('hGap').textContent=target?(total>=target?'目標達成':`あと ${yen(target-total)}`):'目標未設定';const p=target?Math.min(100,total/target*100):0;$('targetProgress').style.width=p+'%';$('targetProgressText').textContent=p.toFixed(1)+'%';const ct=categoryTotals();$('homeAllocation').innerHTML=state.categories.filter(c=>(ct[c]||0)>0).map(c=>{const v=ct[c]||0,pc=total?v/total*100:0;return `<div class="summaryline"><span>${esc(c)}</span><b>${yen(v)} <span class="small">(${pc.toFixed(1)}%)</span></b></div><div class="bar"><i style="width:${pc}%"></i></div>`}).join('')||'<div class="empty">資産を追加すると構成比が表示されます。</div>';if(state.lastRecord){$('prevAsset').textContent=yen(state.lastRecord.asset);$('assetDiff').textContent='現在との差 '+((total-state.lastRecord.asset)>=0?'+':'')+yen(Math.abs(total-state.lastRecord.asset))}else{$('prevAsset').textContent='--';$('assetDiff').textContent='--'}}
+function bindSimInputs(){Object.keys(state.sim).forEach(k=>{const el=$('sim_'+k);if(el)el.value=state.sim[k]})}
+function renderSim(){const {data,targetAge}=simulate();const s=state.sim;const quitVal=at(data,s.quitAge);$('sQuit').textContent=yen(quitVal);$('s10').textContent=yen(at(data,s.age+10));$('s20').textContent=yen(at(data,s.age+20));$('sTarget').textContent=targetAge?targetAge+'歳': '未到達';const ages=[];for(let a=Math.ceil(s.age);a<=90;a++)if([Math.ceil(s.age),Math.round(s.quitAge),Math.ceil(s.age)+5,Math.ceil(s.age)+10,Math.ceil(s.age)+20,60,70,80,90].includes(a))ages.push(a);$('simRows').innerHTML=[...new Set(ages)].sort((a,b)=>a-b).map(a=>{const r=data.find(x=>x.age===a);return r?`<tr><td>${a}歳</td><td>${yen(r.asset)}</td><td>${r.cf>=0?'+':'-'}${yen(Math.abs(r.cf))}</td><td>${r.changed?'変更後':'現在の働き方'}</td></tr>`:''}).join('');renderChart(data)}
+function renderChart(d){const c=$('chart'),ctx=c.getContext('2d'),p=34,max=Math.max(...d.map(x=>Math.max(0,x.asset)),1);ctx.clearRect(0,0,c.width,c.height);ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;for(let i=0;i<5;i++){const y=p+(c.height-2*p)*i/4;ctx.beginPath();ctx.moveTo(p,y);ctx.lineTo(c.width-p,y);ctx.stroke()}ctx.strokeStyle='#2563eb';ctx.lineWidth=4;ctx.beginPath();d.forEach((x,i)=>{const X=p+(c.width-2*p)*i/(d.length-1),Y=c.height-p-Math.max(0,x.asset)/max*(c.height-2*p);i?ctx.lineTo(X,Y):ctx.moveTo(X,Y)});ctx.stroke()}
+function renderTime(){const h=Math.max(0,state.time.fullHours-state.time.partHours),loss=state.time.fullNet-state.time.partNet;$('freeHours').textContent=Math.round(h).toLocaleString()+'時間';$('lostNet').textContent=Math.round(loss).toLocaleString()+'万円';$('hourCalc').textContent=h>0?'約'+Math.round(loss*10000/h).toLocaleString()+'円':'--';$('freePeriod').textContent=Math.round(h*state.time.years).toLocaleString()+'時間'}
+function syncForms(){const s=state.sim,t=state.time;$('age').value=s.age;$('quitAge').value=s.quitAge;$('pre').value=s.pre;$('post').value=s.post;$('income').value=s.income;$('afterIncome').value=s.afterIncome;$('expense').value=s.expense;$('inflation').value=s.inflation;$('contrib').value=s.contrib;$('target').value=s.target;$('targetName').value=state.settings.targetName;$('fullHours').value=t.fullHours;$('partHours').value=t.partHours;$('fullNet').value=t.fullNet;$('partNet').value=t.partNet;$('years').value=t.years}
+function readForms(){state.sim={age:num('age'),quitAge:num('quitAge'),pre:num('pre'),post:num('post'),income:num('income'),afterIncome:num('afterIncome'),expense:num('expense'),inflation:num('inflation'),contrib:num('contrib'),target:num('target')};state.time={fullHours:num('fullHours'),partHours:num('partHours'),fullNet:num('fullNet'),partNet:num('partNet'),years:num('years')};state.settings.targetName=$('targetName').value}
+
+function currentMonth(){ return new Date().toISOString().slice(0,7); }
+function renderTxCategories(){
+  const sel=$('txCat');
+  if(sel) sel.innerHTML=state.txCategories.map(c=>`<option>${esc(c)}</option>`).join('');
+  const list=$('txCatList');
+  if(list) list.innerHTML=state.txCategories.map((c,i)=>`<div class="row"><span>${esc(c)}</span><button class="danger" data-deltxcat="${i}">削除</button></div>`).join('');
+  document.querySelectorAll('[data-deltxcat]').forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.deltxcat), c=state.txCategories[i];
+    if(state.transactions.some(t=>t.category===c)){ alert('このカテゴリの記録が残っているため削除できません。'); return; }
+    if(state.txCategories.length<=1){ alert('カテゴリは1つ以上必要です。'); return; }
+    state.txCategories.splice(i,1); saveState(); renderAll();
+  });
+}
+function renderBudget(){
+  const month=currentMonth();
+  const tx=state.transactions.filter(t=>(t.date||'').slice(0,7)===month);
+  const inc=tx.filter(t=>t.type==='income').reduce((s,t)=>s+Number(t.amount||0),0);
+  const exp=tx.filter(t=>t.type==='expense').reduce((s,t)=>s+Number(t.amount||0),0);
+  $('bIncome').textContent=yen(inc/10000);
+  $('bExpense').textContent=yen(exp/10000);
+  $('bBalance').textContent=yen((inc-exp)/10000);
+  $('bCount').textContent=tx.filter(t=>t.type==='expense').length+'件';
+  const cats={}; tx.filter(t=>t.type==='expense').forEach(t=>cats[t.category]=(cats[t.category]||0)+Number(t.amount||0));
+  const total=exp||1;
+  $('budgetCats').innerHTML=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([c,v])=>
+    `<div class="summaryline"><span>${esc(c)}</span><b>${yen(v/10000)} <span class="small">(${(v/total*100).toFixed(1)}%)</span></b></div><div class="bar"><i style="width:${v/total*100}%"></i></div>`
+  ).join('') || '<div class="empty">今月の支出はまだありません。</div>';
+  const all=[...state.transactions].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  $('txList').innerHTML=all.length ? all.slice(0,100).map(t=>
+    `<div class="asset-item"><div><div class="asset-name">${esc(t.category)}</div><div class="asset-cat">${esc(t.date||'')} ${esc(t.memo||'')}</div></div><div class="amount ${t.type==='income'?'good':'bad'}">${t.type==='income'?'+':'-'}${yen(Number(t.amount||0)/10000)}</div><div class="actions"><button class="danger" data-deltx="${t.id}">削除</button></div></div>`
+  ).join('') : '<div class="empty">まだ家計簿の記録がありません。</div>';
+  document.querySelectorAll('[data-deltx]').forEach(b=>b.onclick=()=>{
+    state.transactions=state.transactions.filter(t=>t.id!==b.dataset.deltx); saveState(); renderAll();
+  });
+}
+function addTransaction(){
+  const amount=Math.max(0,Number($('txAmount').value)||0);
+  if(!amount){alert('金額を入力してください。');return;}
+  state.transactions.push({
+    id:(crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random())),
+    date:$('txDate').value||new Date().toISOString().slice(0,10),
+    type:$('txType').value, category:$('txCat').value, amount,
+    memo:$('txMemo').value.trim()
+  });
+  $('txAmount').value=''; $('txMemo').value=''; saveState(); renderAll();
+}
+function fireDiagnosis(){
+  const expense=Math.max(0,Number($('fireExpense').value)||0);
+  const rate=Math.max(0.1,Number($('fireRate').value)||4);
+  const assets=Math.max(0,Number($('fireAssets').value)||0);
+  const contrib=Math.max(0,Number($('fireContrib').value)||0);
+  const ret=Number($('fireReturn').value)||0;
+  const age=Number($('fireAge').value)||30;
+  const target=expense/(rate/100);
+  $('fireTarget').textContent=yen(target);
+  $('fireGap2').textContent=assets>=target?'達成':yen(target-assets);
+  $('firePct').textContent=(target?Math.min(100,assets/target*100):0).toFixed(1)+'%';
+  let a=assets, reach=null;
+  for(let i=0;i<=80;i++){ if(a>=target){reach=age+i;break;} a=a*(1+ret/100)+contrib; }
+  $('fireAgeResult').textContent=reach?reach+'歳ごろ':'未到達';
+  $('fireScenarios').innerHTML=[3,3.5,4,4.5,5].map(r=>{
+    const tar=expense/(r/100); let x=assets, ra=null;
+    for(let i=0;i<=80;i++){if(x>=tar){ra=age+i;break;} x=x*(1+ret/100)+contrib;}
+    return `<div class="row"><span>取り崩し率 ${r}%</span><b>${yen(tar)} / ${ra?ra+'歳ごろ':'未到達'}</b></div>`;
+  }).join('');
+}
+
+function renderAll(){renderCategories();renderAssets();renderHome();syncForms();renderSim();renderTime();renderTxCategories();renderBudget();if(document.getElementById("fire")){fireDiagnosis();}}
+function record(){const total=totalAssets();if(state.lastRecord){const d=total-state.lastRecord.asset;$('assetDiff').textContent='今回との差 '+(d>=0?'+':'')+yen(Math.abs(d))}state.lastRecord={date:new Date().toISOString(),asset:total};saveState();renderHome();alert('現在の資産を記録しました。')}
+$('addAsset').onclick=addAsset;$('addSample').onclick=addSample;$('recordBtn').onclick=record;
+$('addCat').onclick=()=>{const c=$('customCat').value.trim();if(!c)return;if(state.categories.includes(c)){alert('すでに存在します。');return}state.categories.push(c);$('customCat').value='';saveState();renderAll()};
+$('saveAll').onclick=()=>{readForms();saveState();renderAll();alert('保存しました。')};
+$('resetAll').onclick=()=>{if(confirm('この端末に保存したアプリデータをすべて初期化しますか？')){state=structuredClone(defaultState);saveState();renderAll()}};
+['age','quitAge','pre','post','income','afterIncome','expense','inflation','contrib','target'].forEach(id=>$(id).addEventListener('input',()=>{readForms();saveState();renderHome();renderSim()}));
+['fullHours','partHours','fullNet','partNet','years'].forEach(id=>$(id).addEventListener('input',()=>{readForms();saveState();renderTime()}));
+$('targetName').addEventListener('input',()=>{state.settings.targetName=$('targetName').value;saveState()});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.page).classList.add('active')});
+renderAll();
+</script>
+</body>
+</html>
