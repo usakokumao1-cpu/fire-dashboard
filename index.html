@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>FIRE Dashboard</title>
+<style>
+:root{--bg:#f1f5f9;--card:#fff;--text:#0f172a;--muted:#64748b;--line:#e2e8f0;--blue:#2563eb;--green:#059669;--red:#dc2626}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+header{background:#0f172a;color:white;padding:22px 16px 18px;position:sticky;top:0;z-index:10}.head{max-width:920px;margin:auto}
+.title{font-size:23px;font-weight:800}.subtitle{font-size:12px;color:#cbd5e1;margin-top:4px}
+nav{display:flex;gap:7px;margin-top:15px;overflow:auto}.tab{background:#1e293b;color:#cbd5e1;border:0;border-radius:999px;padding:8px 13px;white-space:nowrap;font-size:13px}.tab.active{background:white;color:#0f172a;font-weight:700}
+main{max-width:920px;margin:auto;padding:14px 14px 80px}.page{display:none}.page.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.grid4{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px #00000007}
+.metric{min-height:105px}.label{font-size:12px;color:var(--muted);margin-bottom:6px}.big{font-size:25px;font-weight:800;letter-spacing:-.5px}.small{font-size:12px;color:var(--muted)}
+.good{color:var(--green)}.bad{color:var(--red)}
+h2{font-size:17px;margin:0 0 14px}.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+input,select{width:100%;padding:11px 10px;border:1px solid #cbd5e1;border-radius:11px;background:white;font-size:16px}
+button.primary,button.secondary{border:0;border-radius:11px;padding:11px 14px;font-weight:750;margin:10px 6px 0 0}button.primary{background:var(--blue);color:#fff}button.secondary{background:#e2e8f0;color:#0f172a}
+.row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}
+canvas{width:100%;height:245px;background:#f8fafc;border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:8px 4px;border-bottom:1px solid var(--line);text-align:right}th:first-child,td:first-child{text-align:left}
+.badge{display:inline-block;padding:5px 8px;border-radius:999px;background:#dbeafe;color:#1d4ed8;font-size:11px;font-weight:700}
+.progress{height:12px;background:#e2e8f0;border-radius:999px;overflow:hidden}.progress i{display:block;height:100%;background:var(--blue);width:0}
+.note{font-size:12px;line-height:1.6;color:var(--muted)}.center{text-align:center}
+@media(min-width:700px){.grid{grid-template-columns:repeat(4,1fr)}.grid4{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<header><div class="head">
+<div class="title">FIRE Dashboard</div><div class="subtitle">資産を「自由」に変えるための個人用ダッシュボード</div>
+<nav>
+<button class="tab active" data-page="home">ホーム</button>
+<button class="tab" data-page="assets">資産</button>
+<button class="tab" data-page="sim">シミュレーション</button>
+<button class="tab" data-page="time">時間</button>
+</nav>
+</div></header>
+
+<main>
+<section id="home" class="page active">
+<div class="grid">
+<div class="card metric"><div class="label">現在の世帯資産</div><div class="big" id="hTotal">--</div><div class="small" id="hDate"></div></div>
+<div class="card metric"><div class="label">あなたの資産</div><div class="big" id="hMine">--</div><div class="small">S&P500 + NASDAQ100 + FANG+ + 現金</div></div>
+<div class="card metric"><div class="label">27歳予想資産</div><div class="big" id="h27">--</div><div class="small">現在設定のシミュレーション</div></div>
+<div class="card metric"><div class="label">FIREまで</div><div class="big" id="hGap">--</div><div class="small">27歳目標ライン 2,800万円</div></div>
+</div>
+<div class="card"><h2>27歳FIRE達成率</h2><div class="progress"><i id="progress"></i></div><div class="row"><span>現在資産 → 目標2,800万円</span><b id="progressText">--</b></div></div>
+<div class="card"><h2>今日の資産</h2><div class="row"><span>前回記録</span><b id="prevAsset">--</b></div><div class="row"><span>今回との差</span><b id="assetDiff">--</b></div><button class="primary" id="recordBtn">今日の資産を記録</button></div>
+<div class="card"><h2>あなたのFIRE思想</h2><p class="note">FIREは「一生働かない」ためではなく、「働くかどうかを自分で決められる状態」を作るための手段。資産・時間・自由を同じ画面で管理します。</p></div>
+</section>
+
+<section id="assets" class="page">
+<div class="card"><h2>現在の資産を入力（万円）</h2>
+<div class="form">
+<label><div class="label">あなた：現金</div><input id="cash" type="number" value="50" step=".1"></label>
+<label><div class="label">母：現金</div><input id="mcash" type="number" value="0" step=".1"></label>
+<label><div class="label">S&P500</div><input id="sp" type="number" value="316.7" step=".1"></label>
+<label><div class="label">NASDAQ100</div><input id="nas" type="number" value="316.7" step=".1"></label>
+<label><div class="label">FANG+</div><input id="fang" type="number" value="316.7" step=".1"></label>
+<label><div class="label">母：投資</div><input id="motherInv" type="number" value="500" step=".1"></label>
+</div><button class="primary" id="saveAssets">保存</button></div>
+<div class="grid4">
+<div class="card metric"><div class="label">S&P500比率</div><div class="big" id="spPct">--</div></div>
+<div class="card metric"><div class="label">NASDAQ比率</div><div class="big" id="nasPct">--</div></div>
+<div class="card metric"><div class="label">FANG+比率</div><div class="big" id="fangPct">--</div></div>
+<div class="card metric"><div class="label">現金比率</div><div class="big" id="cashPct">--</div></div>
+</div>
+</section>
+
+<section id="sim" class="page">
+<div class="card"><h2>シミュレーション条件</h2>
+<div class="form">
+<label><div class="label">現在年齢</div><input id="age" type="number" value="24.6" step=".1"></label>
+<label><div class="label">正社員を辞める年齢</div><input id="quitAge" type="number" value="27" step=".1"></label>
+<label><div class="label">27歳までの運用利回り%</div><input id="pre" type="number" value="6" step=".1"></label>
+<label><div class="label">27歳以降の運用利回り%</div><input id="post" type="number" value="6" step=".1"></label>
+<label><div class="label">あなた年収（万円）</div><input id="salary" type="number" value="550"></label>
+<label><div class="label">退職後収入（万円）</div><input id="part" type="number" value="100"></label>
+<label><div class="label">母の給与（万円）</div><input id="motherSalary" type="number" value="300"></label>
+<label><div class="label">母の退職年齢</div><input id="motherRetire" type="number" value="30"></label>
+<label><div class="label">世帯生活費（万円/年）</div><input id="expense" type="number" value="180"></label>
+<label><div class="label">生活費上昇率%</div><input id="inflation" type="number" value="2" step=".1"></label>
+<label><div class="label">あなたNISA積立（万円/年）</div><input id="myContrib" type="number" value="120"></label>
+<label><div class="label">母NISA積立（万円/年）</div><input id="motherContrib" type="number" value="120"></label>
+</div><p class="note">入力すると即時再計算。給与の手取りは正社員77%、退職後97%、母82%の簡易モデル。年金・税・社会保険の実額を保証するものではありません。</p></div>
+<div class="grid">
+<div class="card metric"><div class="label">27歳</div><div class="big" id="s27">--</div></div>
+<div class="card metric"><div class="label">30歳</div><div class="big" id="s30">--</div></div>
+<div class="card metric"><div class="label">40歳</div><div class="big" id="s40">--</div></div>
+<div class="card metric"><div class="label">60歳</div><div class="big" id="s60">--</div></div>
+</div>
+<div class="card"><h2>資産推移</h2><canvas id="chart" width="900" height="245"></canvas></div>
+<div class="card"><h2>年齢別シミュレーション</h2><table><thead><tr><th>年齢</th><th>資産</th><th>年間収支</th><th>状態</th></tr></thead><tbody id="simRows"></tbody></table></div>
+</section>
+
+<section id="time" class="page">
+<div class="card"><h2>時間を買う計算機</h2>
+<div class="form">
+<label><div class="label">正社員の年間労働時間</div><input id="fullHours" type="number" value="2000"></label>
+<label><div class="label">退職後の年間労働時間</div><input id="partHours" type="number" value="700"></label>
+<label><div class="label">正社員手取り（万円/年）</div><input id="fullNet" type="number" value="425"></label>
+<label><div class="label">退職後手取り（万円/年）</div><input id="partNet" type="number" value="97"></label>
+</div>
+<div class="grid">
+<div class="card metric"><div class="label">年間の自由時間</div><div class="big" id="freeHours">--</div></div>
+<div class="card metric"><div class="label">失う年間手取り</div><div class="big" id="lostNet">--</div></div>
+<div class="card metric"><div class="label">1時間の交換価値</div><div class="big" id="hourCalc">--</div></div>
+<div class="card metric"><div class="label">13年間の自由時間</div><div class="big" id="free13">--</div></div>
+</div>
+<p class="note">これは市場価格ではなく、「追加の労働による将来経済価値を手放して自由時間を得る」という、あなた専用の意思決定指標です。</p>
+</div>
+</section>
+</main>
+
+<script>
+const IDS=["cash","mcash","sp","nas","fang","motherInv","age","quitAge","pre","post","salary","part","motherSalary","motherRetire","expense","inflation","myContrib","motherContrib","fullHours","partHours","fullNet","partNet"];
+const $=id=>document.getElementById(id);
+const num=id=>{const x=parseFloat($(id).value);return Number.isFinite(x)?x:0};
+const yen=m=>new Intl.NumberFormat("ja-JP",{style:"currency",currency:"JPY",maximumFractionDigits:0}).format(m*10000);
+const pct=x=>(x*100).toFixed(1)+"%";
+
+function assets(){
+ return {total:num("cash")+num("mcash")+num("sp")+num("nas")+num("fang")+num("motherInv"),
+ mine:num("cash")+num("sp")+num("nas")+num("fang")};
+}
+function simulate(){
+ let A=assets().total, e=num("expense"), data=[];
+ const start=num("age"), quit=num("quitAge"), pre=num("pre")/100, post=num("post")/100, inf=num("inflation")/100;
+ for(let age=Math.ceil(start);age<=80;age++){
+  const employed=age<quit;
+  const my=(employed?num("salary"):num("part"))*(employed?.77:.97);
+  const mother=age<num("motherRetire")?num("motherSalary")*.82:0;
+  const pension=66+(age>=60?72:0);
+  const contrib=employed?num("myContrib")+num("motherContrib"):(age<num("motherRetire")?num("motherContrib"):0);
+  const cf=my+mother+pension-e-contrib;
+  A=A+A*(employed?pre:post)+cf;
+  data.push({age,asset:A,cf,employed}); e*=1+inf;
+ }
+ return data;
+}
+function at(data,age){const r=data.find(x=>x.age===age);return r?r.asset:0}
+function render(){
+ const a=assets(), d=simulate();
+ $("hTotal").textContent=yen(a.total);$("hMine").textContent=yen(a.mine);$("h27").textContent=yen(at(d,27));
+ const gap=at(d,27)-2800;$("hGap").textContent=gap>=0?`+${yen(gap)}`:`-${yen(-gap)}`;
+ const prog=Math.max(0,Math.min(100,a.total/2800*100));$("progress").style.width=prog+"%";$("progressText").textContent=prog.toFixed(1)+"%";
+ $("hDate").textContent="現在値";
+ $("s27").textContent=yen(at(d,27));$("s30").textContent=yen(at(d,30));$("s40").textContent=yen(at(d,40));$("s60").textContent=yen(at(d,60));
+ $("simRows").innerHTML=d.filter(x=>[25,27,30,35,40,45,50,55,60,65,70,75,80].includes(x.age)).map(x=>`<tr><td>${x.age}歳</td><td>${yen(x.asset)}</td><td>${x.cf>=0?"+":""}${yen(Math.abs(x.cf))}</td><td>${x.employed?"正社員":"セミリタイア"}</td></tr>`).join("");
+ const inv=a.total||1;$("spPct").textContent=pct(num("sp")/inv);$("nasPct").textContent=pct(num("nas")/inv);$("fangPct").textContent=pct(num("fang")/inv);$("cashPct").textContent=pct((num("cash")+num("mcash"))/inv);
+ renderChart(d);renderTime();
+}
+function renderChart(d){
+ const c=$("chart"),ctx=c.getContext("2d"),p=34,max=Math.max(...d.map(x=>x.asset),1);
+ ctx.clearRect(0,0,c.width,c.height);ctx.strokeStyle="#e2e8f0";ctx.lineWidth=1;
+ for(let i=0;i<5;i++){let y=p+(c.height-2*p)*i/4;ctx.beginPath();ctx.moveTo(p,y);ctx.lineTo(c.width-p,y);ctx.stroke()}
+ ctx.strokeStyle="#2563eb";ctx.lineWidth=4;ctx.beginPath();
+ d.forEach((x,i)=>{let X=p+(c.width-2*p)*i/(d.length-1),Y=c.height-p-Math.max(0,x.asset)/max*(c.height-2*p);i?ctx.lineTo(X,Y):ctx.moveTo(X,Y)});ctx.stroke();
+}
+function renderTime(){
+ const h=num("fullHours")-num("partHours"),loss=num("fullNet")-num("partNet");
+ $("freeHours").textContent=Math.round(h).toLocaleString()+"時間";$("lostNet").textContent=Math.round(loss)+"万円";
+ $("hourCalc").textContent=h>0?"約"+Math.round(loss*10000/h).toLocaleString()+"円":"--";$("free13").textContent=Math.round(h*13).toLocaleString()+"時間";
+}
+function load(){
+ try{const o=JSON.parse(localStorage.getItem("fireDashboard")||"{}");IDS.forEach(id=>{if(o[id]!==undefined)$(id).value=o[id]})}catch(e){}
+ const rec=localStorage.getItem("lastAssetRecord");
+ if(rec){const r=JSON.parse(rec);$("prevAsset").textContent=yen(r.asset);$("assetDiff").textContent="前回記録済み"}
+}
+function save(){
+ const o={};IDS.forEach(id=>o[id]=$(id).value);localStorage.setItem("fireDashboard",JSON.stringify(o));alert("保存しました");
+}
+function record(){
+ const asset=assets().total, old=JSON.parse(localStorage.getItem("lastAssetRecord")||"null");
+ $("prevAsset").textContent=old?yen(old.asset):"初回";
+ $("assetDiff").textContent=old?((asset-old.asset)>=0?"+":"")+yen(Math.abs(asset-old.asset)):"--";
+ localStorage.setItem("lastAssetRecord",JSON.stringify({date:new Date().toISOString(),asset}));
+}
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));b.classList.add("active");$(b.dataset.page).classList.add("active")}));
+IDS.forEach(id=>$(id).addEventListener("input",render));
+$("saveAssets").addEventListener("click",save);$("recordBtn").addEventListener("click",record);
+load();render();
+</script>
+</body></html>
